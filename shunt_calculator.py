@@ -17,7 +17,7 @@ from __future__ import division
 
 import wx
 import math
-
+from pprint import pprint
 
 
 class CalculatorGUI(wx.Frame):
@@ -113,7 +113,11 @@ class CalculatorGUI(wx.Frame):
         self.pvrsvrratiodisplay = wx.TextCtrl(self.middlepanel, -1, "",
                                               style=wx.TE_READONLY)
         self.calculatebutton = wx.Button(self.lowerpanel, -1, "Calculate")
-        self.stepbutton = wx.Button(self.lowerpanel, -1, "Step")
+        self.stepforwardbutton = wx.Button(self.lowerpanel, 1001, "Step forward")
+        self.stepbackbutton = wx.Button(self.lowerpanel, 1002, "Step back")
+        self.stepbeginningbutton = wx.Button(self.lowerpanel, 1003, "Step beginning")
+        self.stependbutton = wx.Button(self.lowerpanel, 1004, "Step end")
+
         self.resultctrl = wx.TextCtrl(self.lowerpanel, -1, "",
                                       style=wx.TE_MULTILINE|wx.TE_READONLY)
 
@@ -125,7 +129,9 @@ class CalculatorGUI(wx.Frame):
 
         # for testing
         self.fill_demo_values()
-        
+
+        self.frame_current_count = 0
+        self.frame_total_count = 0
         
     def __set_properties(self):
         # begin wxGlade: ShuntCalculator.__set_properties
@@ -202,7 +208,7 @@ class CalculatorGUI(wx.Frame):
         inputsizer.Add(self.aopresslabel, 0,
                        wx.ALIGN_CENTER_HORIZONTAL|wx.ALIGN_CENTER_VERTICAL, 0)
         inputsizer.Add(self.aopressctrl, 0, wx.EXPAND, 0)
-        middlepanelsizer.Add(inputsizer, 1, wx.RIGHT|wx.EXPAND, 5)
+        middlepanelsizer.Add(inputsizer, 2, wx.RIGHT|wx.EXPAND, 5)
         outputsizer.Add(self.bsalabel, 0,
                         wx.ALIGN_CENTER_HORIZONTAL|wx.ALIGN_CENTER_VERTICAL, 0)
         outputsizer.Add(self.bsadisplay, 0, wx.EXPAND, 0)
@@ -236,13 +242,17 @@ class CalculatorGUI(wx.Frame):
         outputsizer.Add(self.pvrsvrratiolabel, 0,
                         wx.ALIGN_CENTER_HORIZONTAL|wx.ALIGN_CENTER_VERTICAL, 0)
         outputsizer.Add(self.pvrsvrratiodisplay, 0, wx.EXPAND, 0)
-        middlepanelsizer.Add(outputsizer, 1, wx.LEFT|wx.EXPAND, 5)
+        middlepanelsizer.Add(outputsizer, 3, wx.LEFT|wx.EXPAND, 5)
         self.middlepanel.SetSizer(middlepanelsizer)
         mainpanelsizer.Add(self.middlepanel, 4,
            wx.ALL|wx.EXPAND|wx.ALIGN_CENTER_HORIZONTAL|wx.ALIGN_CENTER_VERTICAL,
                            5)
         sizer_1.Add(self.calculatebutton, 1, wx.ALL|wx.ALIGN_CENTER_VERTICAL, 5)
-        sizer_1.Add(self.stepbutton, 1, wx.ALL|wx.ALIGN_CENTER_VERTICAL, 5)
+        sizer_1.Add(self.stepforwardbutton, 1, wx.ALL|wx.ALIGN_CENTER_VERTICAL, 5)
+        sizer_1.Add(self.stepbackbutton, 1, wx.ALL|wx.ALIGN_CENTER_VERTICAL, 5)
+        sizer_1.Add(self.stepbeginningbutton, 1, wx.ALL|wx.ALIGN_CENTER_VERTICAL, 5)
+        sizer_1.Add(self.stependbutton, 1, wx.ALL|wx.ALIGN_CENTER_VERTICAL, 5)
+        
         lowerpanelsizer.Add(sizer_1, 1, wx.EXPAND, 0)
         lowerpanelsizer.Add(self.resultctrl, 1, wx.ALL|wx.EXPAND, 2)
         self.lowerpanel.SetSizer(lowerpanelsizer)
@@ -258,6 +268,10 @@ class CalculatorGUI(wx.Frame):
 
     def __set_bindings(self):
         self.calculatebutton.Bind(wx.EVT_BUTTON, self.on_calculate)
+        self.stepforwardbutton.Bind(wx.EVT_BUTTON, self.on_step)
+        self.stepbackbutton.Bind(wx.EVT_BUTTON, self.on_step)
+        self.stepbeginningbutton.Bind(wx.EVT_BUTTON, self.on_step)
+        self.stependbutton.Bind(wx.EVT_BUTTON, self.on_step)
         
         
     def getvalues(self):
@@ -313,68 +327,210 @@ class CalculatorGUI(wx.Frame):
     def on_calculate(self, event):
         """Run all the calculations and display the results"""
         vals = self.getvalues()
-        print vals
         vals, err_msg, warn_msg = self.calculator.process_entries(vals)
         
-        self.calculate_all(vals)
-
+        self.frames = self.calculate_all(vals)
+        self.frame_total_count = len(self.frames)
+        
+        if event != None:
+            self.display_result_frame(self.frames[len(self.frames)-1])
+            
         
     def calculate_all(self, vals):
         """Main calculations.
         Done in stages.
-        WAITFORRESUME flag determines if they will be run with or without break.
+        Add the values to be displayed to a list
         """
+        results_display = []
+        
         # Body surface area
         bsa = self.calculator.calculate_bsa(vals['ht'], vals['wt'])
-        self.bsadisplay.SetValue(str(bsa))
+
+        if self.calculator.BSA == 'mosteller':
+            results_display.append((self.bsadisplay, "Mosteller's formula"))
+            results_display.append((self.bsadisplay, "sqrt(Height(cm) x Weight(kg) / 3600)"))
+            results_display.append((self.bsadisplay, "sqrt(%d x %d / 3600)" %(vals['ht'], vals['wt'])))
+            
+        elif self.calculator.BSA == 'dubois':
+            results_display.append((self.bsadisplay, "Dubois' formula"))
+            results_display.append((self.bsadisplay,
+                                    "0.20247 x height in metres ^ 0.725 x weight ^ 0.425"))
+            results_display.append((self.bsadisplay,
+                   "0.02047 x %0.2f ^ 0.725 x %d ^ 0.425" %(vals['ht']/100, vals['wt'])))
+            results_display.append((self.bsadisplay,
+                                    "0.02047 x %0.2f x %0.2f" %(vals['ht']**0.725,
+                                                                vals['wt']**0.425)))
+            
+        results_display.append((self.bsadisplay, str(bsa)))
         
         # Estimated Vo2
-        print vals['sex'], vals['age'], vals['hr'], bsa
-        
         vo2 = self.calculator.calculate_vo2(vals['sex'], vals['age'],
                                  vals['hr'], bsa)
 
-        print vo2
-        self.vo2display.SetValue(str(vo2))
+        if vals['sex'] == 0:
+            results_display.append((self.vo2display,
+                          "Male: BSA x (138.1 - (11.49 x log(age)) + (0.378 x Heart rate)))"))
+            results_display.append((self.vo2display,
+             "%0.2f x (138.1 - (11.49 x log(%d)) + (0.378 x %d)))" %(bsa, vals['age'], vals['hr'])))
+            results_display.append((self.vo2display,
+             "%0.2f x (138.1 - (11.49 x %d) + %d))" %(bsa, math.log(vals['age']), 0.378*vals['hr'])))
+            
+        elif vals['sex'] == 1:
+            results_display.append((self.vo2display,
+                       "Female: BSA x (138.1 - (11.49 x log(age)) + (0.378 x Heart rate)))"))
+            results_display.append((self.vo2display,
+              "%0.2f x (138.1 - (11.49 x log(%d)) + (0.378 x %d)))" (bsa, vals['age'], vals['hr'])))
+            results_display.append((self.vo2display,
+              "%0.2f x (138.1 - (11.49 x %d) + %d))" (bsa, math.log(vals['age']), 0.378*vals['hr'])))
+        results_display.append((self.vo2display, str(vo2)))
                 
         # Calculate MV saturation
         mvsat = self.calculator.calculate_mvsat(vals['svcsat'],
                                      vals['ivcsat'])
-        self.mvsatdisplay.SetValue(str(mvsat))
+        if self.calculator.MVSAT == 'svc':
+            results_display.append((self.mvsatdisplay, "= SVC saturation"))
+        elif self.calculator.MVSAT == 'ivc':
+            results_display.append((self.mvsatdisplay, "= IVC saturation"))
+        elif self.calculator.MVSAT == 'combo1':
+            results_display.append((self.mvsatdisplay, "(3 x SVC + IVC) / 4"))
+            results_display.append((self.mvsatdisplay, "(3 x %d + %d) / 4" %(vals['svcsat'], vals['ivcsat'])))
+            results_display.append((self.mvsatdisplay, "(%d + %d) / 4" %(3*vals['svcsat'], vals['ivcsat'])))
+        elif self.calculator.MVSAT == 'combo2':
+            results_display.append((self.mvsatdisplay, "(2 x SVC + 3 x IVC) / 5"))
+            results_display.append((self.mvsatdisplay, "(2 x %d + 3 x %d) / 5" %(vals['svcsat'], vals['ivcsat'])))
+            results_display.append((self.mvsatdisplay, "(%d + %d) / 5" %(2*vals['svcsat'], 3*vals['ivcsat'])))
+        elif self.calculator.MVSAT == 'combo3':
+            results_display.append((self.mvsatdisplay, "(SVC + 2 x IVC) / 3"))
+            results_display.append((self.mvsatdisplay, "(%d + 2 x %d) / 3" %(vals['svcsat'], vals['ivcsat'])))
+            results_display.append((self.mvsatdisplay, "(%d + %d) / 4" %(vals['svcsat'], 2*vals['ivcsat'])))
+        results_display.append((self.mvsatdisplay, str(mvsat)))
         
         # O2 carrying capacity
         o2capacity = self.calculator.calculate_02capacity(vals['hb'])
-        self.o2capacitydisplay.SetValue(str(o2capacity))
+        results_display.append((self.o2capacitydisplay, "Hb x 1.36 x 10"))
+        results_display.append((self.o2capacitydisplay, str(o2capacity)))
         
         # Qp
         qp = self.calculator.calculate_Qp(vo2, o2capacity, vals['pvsat'],
                                vals['pasat'])
-        self.qpdisplay.SetValue(str(qp))
+
+        results_display.append((self.qpdisplay, "O2 capacity x (PV sat - PA sat) / 100"))
+        results_display.append((self.qpdisplay,
+                  "%0.2f x (%d - %d) / 100" %(o2capacity, vals['pvsat'], vals['pasat'])))
+        results_display.append((self.qpdisplay, str(qp)))
 
         # Qs
         qs = self.calculator.calculate_Qs(vo2, o2capacity, vals['aosat'],
                                mvsat)
-        self.qsdisplay.SetValue(str(qs))
+        results_display.append((self.qsdisplay, "O2 capacity x (Ao sat - MV sat) / 100"))
+        results_display.append((self.qsdisplay,
+                  "%0.2f x (%d - %d) / 100" %(o2capacity, vals['aosat'], mvsat)))
+        
+        results_display.append((self.qsdisplay, str(qs)))
 
         # Qef
         qe = self.calculator.calculate_Qe(vo2, o2capacity, vals['pvsat'],
                                 mvsat)
-        self.qedisplay.SetValue(str(qe))
+        results_display.append((self.qedisplay, "O2 capacity x (PV sat - MV sat) / 100"))
+        results_display.append((self.qedisplay,
+                  "%0.2f x (%d - %d) / 100" %(o2capacity, vals['pvsat'], mvsat)))
+        results_display.append((self.qedisplay, str(qe)))
         
         # Qp / Qs
         qp_qs = qp / qs
-        self.qratiodisplay.SetValue(str(qp_qs))
+        results_display.append((self.qratiodisplay, "Qp / Qs"))
+        results_display.append((self.qratiodisplay, str(qp_qs)))
         
         # PVR
         pvr = (vals['papress'] - vals['lapress']) / qp
-        self.pvrdisplay.SetValue(str(pvr))
+        results_display.append((self.pvrdisplay, "(PA press - LA pressure) / Qp"))
+        results_display.append((self.pvrdisplay, "(%d - %d) / %0.2f" %(vals['papress'], vals['lapress'], qp)))
+        results_display.append((self.pvrdisplay, str(pvr)))
         
         # SVR
         svr = (vals['aopress'] - vals['rapress']) / qs
-        self.svrdisplay.SetValue(str(svr))
+        results_display.append((self.svrdisplay, "(Ao press - RA pressure) / Qs"))
+        results_display.append((self.svrdisplay, "(%d - %d) / %0.2f" %(vals['aopress'], vals['rapress'], qs)))
+        results_display.append((self.svrdisplay, str(svr)))
+
+        return self.build_frames(results_display)
+
+
         
+    def build_frames(self, results_display):
+        """Given the steps in the display of results, build
+        the individual frames"""
+        self.controls = [self.bsadisplay, self.vo2display,
+                         self.mvsatdisplay, self.o2capacitydisplay,
+                         self.qpdisplay, self.qsdisplay, self.qedisplay,
+                         self.qratiodisplay, self.pvrdisplay,
+                         self.svrdisplay]
+
+        frames = {}
+        framecounter = 0
+
+        # first frame is empty
+        frames[framecounter] = {}
+
+        #
+        for control, value in results_display:
+            framecounter += 1
+            frames[framecounter] = frames[framecounter-1].copy()
+            control_index = self.controls.index(control)
+            frames[framecounter][control_index] = value
+
+        return frames
+
+                
+    def display_result_frame(self, frame):
+        """Display one frame from the results.
+        frame is a dict with keys being the control indices and
+        values being the value to set"""
+        for control in self.controls:
+            control.Clear()
+            
+        for ctrl_index in frame:
+            control = self.controls[ctrl_index]
+            control.SetValue(frame[ctrl_index])            
 
 
+    def on_step(self, event):
+        """Any step button is pressed"""
+        id = event.GetId()
+
+        # if results have not been calculated, calculate them
+        if self.frame_total_count == 0:
+            vals = self.getvalues()
+            vals, err_msg, warn_msg = self.calculator.process_entries(vals)
+            self.frames = self.calculate_all(vals)
+            self.frame_total_count = len(self.frames)
+            #self.calculate_all(vals)
+        
+        if id == 1001:
+            self.frame_current_count += 1
+            if self.frame_current_count == self.frame_total_count:
+                self.frame_current_count -= 1
+                return
+            
+        elif id == 1002:
+            self.frame_current_count -= 1
+            if self.frame_current_count < 0:
+                self.frame_current_count = 0
+                return
+
+        elif id == 1003:
+            if self.frame_current_count == 0:
+                return
+            self.frame_current_count = 0
+
+        elif id == 1004:
+            if self.frame_current_count == self.frame_total_count-1:
+                return
+            self.frame_current_count = self.frame_total_count -1
+
+        self.display_result_frame(self.frames[self.frame_current_count])
+                
+        
         
 class ShuntCalculator():
     """Calculate shunt flows and resistances from the pressure
