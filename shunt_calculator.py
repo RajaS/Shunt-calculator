@@ -118,7 +118,7 @@ class CalculatorGUI(wx.Frame):
         self.stepbeginningbutton = wx.Button(self.lowerpanel, 1003, "Step beginning")
         self.stependbutton = wx.Button(self.lowerpanel, 1004, "Step end")
 
-        self.resultctrl = wx.TextCtrl(self.lowerpanel, -1, "",
+        self.messagectrl = wx.TextCtrl(self.lowerpanel, -1, "",
                                       style=wx.TE_MULTILINE|wx.TE_READONLY)
 
         self.__set_properties()
@@ -132,6 +132,13 @@ class CalculatorGUI(wx.Frame):
 
         self.frame_current_count = 0
         self.frame_total_count = 0
+
+        self.controls = [self.bsadisplay, self.vo2display,
+                         self.mvsatdisplay, self.o2capacitydisplay,
+                         self.qpdisplay, self.qsdisplay, self.qedisplay,
+                         self.qratiodisplay, self.pvrdisplay, self.svrdisplay]
+
+
         
     def __set_properties(self):
         # begin wxGlade: ShuntCalculator.__set_properties
@@ -254,7 +261,7 @@ class CalculatorGUI(wx.Frame):
         sizer_1.Add(self.stependbutton, 1, wx.ALL|wx.ALIGN_CENTER_VERTICAL, 5)
         
         lowerpanelsizer.Add(sizer_1, 1, wx.EXPAND, 0)
-        lowerpanelsizer.Add(self.resultctrl, 1, wx.ALL|wx.EXPAND, 2)
+        lowerpanelsizer.Add(self.messagectrl, 1, wx.ALL|wx.EXPAND, 2)
         self.lowerpanel.SetSizer(lowerpanelsizer)
         mainpanelsizer.Add(self.lowerpanel, 1,
                            wx.ALL|wx.EXPAND|wx.FIXED_MINSIZE, 5)
@@ -328,7 +335,15 @@ class CalculatorGUI(wx.Frame):
         """Run all the calculations and display the results"""
         vals = self.getvalues()
         vals, err_msg, warn_msg = self.calculator.process_entries(vals)
-        
+
+        for control in self.controls:
+            control.Clear()
+            
+        if err_msg != '':
+            self.messagectrl.SetValue(err_msg)
+            return
+
+        self.messagectrl.SetValue(warn_msg)
         self.frames = self.calculate_all(vals)
         self.frame_total_count = len(self.frames)
         
@@ -460,12 +475,6 @@ class CalculatorGUI(wx.Frame):
     def build_frames(self, results_display):
         """Given the steps in the display of results, build
         the individual frames"""
-        self.controls = [self.bsadisplay, self.vo2display,
-                         self.mvsatdisplay, self.o2capacitydisplay,
-                         self.qpdisplay, self.qsdisplay, self.qedisplay,
-                         self.qratiodisplay, self.pvrdisplay,
-                         self.svrdisplay]
-
         frames = {}
         framecounter = 0
 
@@ -486,9 +495,6 @@ class CalculatorGUI(wx.Frame):
         """Display one frame from the results.
         frame is a dict with keys being the control indices and
         values being the value to set"""
-        for control in self.controls:
-            control.Clear()
-            
         for ctrl_index in frame:
             control = self.controls[ctrl_index]
             control.SetValue(frame[ctrl_index])            
@@ -619,7 +625,8 @@ class ShuntCalculator():
             try:
                 vals[key] = float(vals[key])
             except ValueError:
-                err_msg += ' '.join(['Error: Entry for', key, 'not valid\n'])
+                if not key == 'name':
+                    err_msg += ' '.join(['Error: Entry for', key, 'not valid\n'])
 
         if err_msg != '':
             return vals, err_msg, warn_msg
@@ -638,9 +645,9 @@ class ShuntCalculator():
             (20, 200, 'aopress', 'aortic pressure')]
 
         for min_val, max_val, k, parameter in assertions:
-            if min_val > vals[k] > max_val:
+            if vals[k] > max_val or vals[k] < min_val:
                 warn_msg += ' '.join(['Warning: Check value entered for', parameter, '\n'])
-
+                
         sats = [('svcsat', 'SVC'),
                 ('ivcsat', 'IVC'),
                 ('pasat', 'PA'),
@@ -653,8 +660,6 @@ class ShuntCalculator():
 
         return vals, err_msg, warn_msg
 
-
-        
     
             
 if __name__ == "__main__":
