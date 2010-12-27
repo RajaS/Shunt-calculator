@@ -130,6 +130,7 @@ class CalculatorGUI(wx.Frame):
         # for testing
         self.fill_demo_values()
 
+        self.old_vals = {}
         self.frame_current_count = 0
         self.frame_total_count = 0
 
@@ -504,10 +505,22 @@ class CalculatorGUI(wx.Frame):
         """Any step button is pressed"""
         id = event.GetId()
 
+        # validate entries, check for changes
+        vals = self.getvalues()
+
+        for control in self.controls:
+            control.Clear()
+            
         # if results have not been calculated, calculate them
-        if self.frame_total_count == 0:
-            vals = self.getvalues()
+        if vals != self.old_vals:
             vals, err_msg, warn_msg = self.calculator.process_entries(vals)
+            self.old_vals = vals.copy()
+
+            if err_msg != '':
+                self.messagectrl.SetValue(err_msg)
+                return
+            self.messagectrl.SetValue(warn_msg)
+
             self.frames = self.calculate_all(vals)
             self.frame_total_count = len(self.frames)
             #self.calculate_all(vals)
