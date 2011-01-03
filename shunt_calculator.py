@@ -19,6 +19,11 @@ import wx
 import math
 from pprint import pprint
 
+ID_SAVE = wx.NewId()
+ID_QUIT = wx.NewId()
+ID_CLEAR = wx.NewId()
+ID_DEMO = wx.NewId()
+
 
 class CalculatorGUI(wx.Frame):
     def __init__(self, *args, **kwds):
@@ -121,20 +126,29 @@ class CalculatorGUI(wx.Frame):
         self.messagectrl = wx.TextCtrl(self.lowerpanel, -1, "",
                                       style=wx.TE_MULTILINE|wx.TE_READONLY)
 
+        self.CreateStatusBar()
         self.__set_properties()
+        self.__build_menubar()
         self.__do_layout()
         self.__set_bindings()
         # end wxGlade
         self.calculator = ShuntCalculator()
 
         # for testing
-        self.fill_demo_values()
+        #self.fill_demo_values()
 
         self.old_vals = {}
         self.frame_current_count = 0
         self.frame_total_count = 0
 
-        self.controls = [self.bsadisplay, self.vo2display,
+        self.input_controls = [self.namectrl, self.sexctrl, self.agectrl,
+                               self.htctrl, self.wtctrl, self.hrctrl,
+                               self.hbctrl, self.ivcsatctrl, self.svcsatctrl,
+                               self.pasatctrl, self.pvsatctrl,
+                               self.aosatctrl, self.lapressctrl, self.rapressctrl,
+                               self.papressctrl, self.aopressctrl]
+        
+        self.output_controls = [self.bsadisplay, self.vo2display,
                          self.mvsatdisplay, self.o2capacitydisplay,
                          self.qpdisplay, self.qsdisplay, self.qedisplay,
                          self.qratiodisplay, self.pvrdisplay, self.svrdisplay]
@@ -151,6 +165,24 @@ class CalculatorGUI(wx.Frame):
         self.lowerpanel.SetMinSize((400, 40))
         # end wxGlade
 
+    def __build_menubar(self):
+        self.MenuBar = wx.MenuBar()
+
+        file_menu = wx.Menu()
+        file_menu.Append(ID_SAVE, "&Save", "Save the report")
+        file_menu.Append(ID_QUIT, "&Quit","Quit the program")
+   
+        input_menu = wx.Menu()
+        input_menu.Append(ID_CLEAR, "Clear", "Clear input values")
+        input_menu.Append(ID_DEMO, "Demo", "Fill demo values")
+        
+        self.MenuBar.Append(file_menu, "&File")
+        self.MenuBar.Append(input_menu, "&Input")
+        #self.MenuBar.Append(report_edit_menu, "&Edit Report")
+                
+        self.SetMenuBar(self.MenuBar)
+        
+        
     def __do_layout(self):
         # begin wxGlade: ShuntCalculator.__do_layout
         mainsizer = wx.BoxSizer(wx.VERTICAL)
@@ -280,7 +312,9 @@ class CalculatorGUI(wx.Frame):
         self.stepbackbutton.Bind(wx.EVT_BUTTON, self.on_step)
         self.stepbeginningbutton.Bind(wx.EVT_BUTTON, self.on_step)
         self.stependbutton.Bind(wx.EVT_BUTTON, self.on_step)
-        
+
+        self.Bind(wx.EVT_MENU, self.fill_demo_values, id=ID_DEMO)
+        self.Bind(wx.EVT_MENU, self.clear_all, id=ID_CLEAR)
         
     def getvalues(self):
         """read the input values into a dictionary"""
@@ -312,7 +346,7 @@ class CalculatorGUI(wx.Frame):
         return vals
 
 
-    def fill_demo_values(self):
+    def fill_demo_values(self, event):
         for ctrl, val in [(self.namectrl, 'John Doe'),
                           (self.agectrl, '36'),
                           (self.sexctrl, 'Male'),
@@ -337,7 +371,7 @@ class CalculatorGUI(wx.Frame):
         vals = self.getvalues()
         vals, err_msg, warn_msg = self.calculator.process_entries(vals)
 
-        for control in self.controls:
+        for control in self.output_controls:
             control.Clear()
             
         if err_msg != '':
@@ -350,8 +384,14 @@ class CalculatorGUI(wx.Frame):
         
         if event != None:
             self.display_result_frame(self.frames[len(self.frames)-1])
+
+
+    def clear_all(self, event):
+        """clear all inout values"""
+        for control in self.input_controls:
+            control.Clear()
+
             
-        
     def calculate_all(self, vals):
         """Main calculations.
         Done in stages.
@@ -486,7 +526,7 @@ class CalculatorGUI(wx.Frame):
         for control, value in results_display:
             framecounter += 1
             frames[framecounter] = frames[framecounter-1].copy()
-            control_index = self.controls.index(control)
+            control_index = self.output_controls.index(control)
             frames[framecounter][control_index] = value
 
         return frames
@@ -497,7 +537,7 @@ class CalculatorGUI(wx.Frame):
         frame is a dict with keys being the control indices and
         values being the value to set"""
         for ctrl_index in frame:
-            control = self.controls[ctrl_index]
+            control = self.output_controls[ctrl_index]
             control.SetValue(frame[ctrl_index])            
 
 
@@ -508,7 +548,7 @@ class CalculatorGUI(wx.Frame):
         # validate entries, check for changes
         vals = self.getvalues()
 
-        for control in self.controls:
+        for control in self.output_controls:
             control.Clear()
             
         # if results have not been calculated, calculate them
