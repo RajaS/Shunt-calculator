@@ -151,7 +151,8 @@ class CalculatorGUI(wx.Frame):
         self.output_controls = [self.bsadisplay, self.vo2display,
                          self.mvsatdisplay, self.o2capacitydisplay,
                          self.qpdisplay, self.qsdisplay, self.qedisplay,
-                         self.qratiodisplay, self.pvrdisplay, self.svrdisplay]
+                         self.qratiodisplay, self.pvrdisplay, self.svrdisplay,
+                                self.pvrsvrratiodisplay]
 
 
         
@@ -509,8 +510,13 @@ class CalculatorGUI(wx.Frame):
         results_display.append((self.svrdisplay, "(%d - %d) / %0.2f" %(vals['aopress'], vals['rapress'], qs)))
         results_display.append((self.svrdisplay, str(svr)))
 
+        # PVR / SVR
+        pvrsvrratio = pvr / svr
+        results_display.append((self.pvrsvrratiodisplay, "PVR / SVR"))
+        results_display.append((self.pvrsvrratiodisplay, "%0.2f / %0.2f" %(pvr, svr)))
+        results_display.append((self.pvrsvrratiodisplay, str(pvrsvrratio)))
+        
         return self.build_frames(results_display)
-
 
         
     def build_frames(self, results_display):
