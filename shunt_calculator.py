@@ -320,8 +320,8 @@ class CalculatorGUI(wx.Frame):
                            5)
         sizer_1.Add(self.calculatebutton, 2, wx.ALL|wx.ALIGN_CENTER_VERTICAL, 10)
         sizer_1.Add(self.stepbeginningbutton, 1, wx.ALL|wx.ALIGN_CENTER_VERTICAL, 5)
-        sizer_1.Add(self.stepforwardbutton, 1, wx.ALL|wx.ALIGN_CENTER_VERTICAL, 5)
         sizer_1.Add(self.stepbackbutton, 1, wx.ALL|wx.ALIGN_CENTER_VERTICAL, 5)
+        sizer_1.Add(self.stepforwardbutton, 1, wx.ALL|wx.ALIGN_CENTER_VERTICAL, 5)
         sizer_1.Add(self.stependbutton, 1, wx.ALL|wx.ALIGN_CENTER_VERTICAL, 5)
         
         lowerpanelsizer.Add(sizer_1, 1, wx.EXPAND, 0)
