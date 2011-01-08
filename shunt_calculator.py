@@ -40,11 +40,11 @@ class CalculatorGUI(wx.Frame):
         wx.Frame.__init__(self, *args, **kwds)
         self.mainpanel = wx.Panel(self, -1)
         self.lowerpanel = wx.Panel(self.mainpanel, -1,
-                                   style=wx.SUNKEN_BORDER|wx.TAB_TRAVERSAL)
+                                   style=wx.RAISED_BORDER|wx.TAB_TRAVERSAL)
         self.middlepanel = wx.Panel(self.mainpanel, -1,
-                                    style=wx.SUNKEN_BORDER|wx.TAB_TRAVERSAL)
+                                    style=wx.SIMPLE_BORDER|wx.TAB_TRAVERSAL)
         self.upperpanel = wx.Panel(self.mainpanel, -1,
-                                   style=wx.SUNKEN_BORDER|wx.TAB_TRAVERSAL)
+                                   style=wx.SIMPLE_BORDER|wx.TAB_TRAVERSAL)
         self.titlelabel = wx.StaticText(self.upperpanel, -1,
                                      "Shunt Calculator", style=wx.ALIGN_CENTRE)
         self.subtitle = wx.StaticText(self.upperpanel, -1,
@@ -131,11 +131,16 @@ class CalculatorGUI(wx.Frame):
         self.pvrsvrratiolabel = wx.StaticText(self.middlepanel, -1, "PVR / SVR")
         self.pvrsvrratiodisplay = wx.TextCtrl(self.middlepanel, -1, "",
                                               style=wx.TE_READONLY)
-        self.calculatebutton = wx.Button(self.lowerpanel, -1, "Calculate")
-        self.stepforwardbutton = wx.Button(self.lowerpanel, 1001, "Step forward")
-        self.stepbackbutton = wx.Button(self.lowerpanel, 1002, "Step back")
-        self.stepbeginningbutton = wx.Button(self.lowerpanel, 1003, "Step beginning")
-        self.stependbutton = wx.Button(self.lowerpanel, 1004, "Step end")
+        self.calculatebutton = wx.BitmapButton(self.lowerpanel, -1,
+                                               wx.Bitmap("icons/calculate.png"))
+        self.stepbeginningbutton = wx.BitmapButton(self.lowerpanel, 1003,
+                                                   wx.Bitmap("icons/beginning.png"))
+        self.stepforwardbutton = wx.BitmapButton(self.lowerpanel, 1001,
+                                                 wx.Bitmap("icons/forward.png"))
+        self.stepbackbutton = wx.BitmapButton(self.lowerpanel, 1002,
+                                              wx.Bitmap("icons/back.png"))
+        self.stependbutton = wx.BitmapButton(self.lowerpanel, 1004,
+                                             wx.Bitmap("icons/end.png"))
 
         self.messagectrl = wx.TextCtrl(self.lowerpanel, -1, "",
                                       style=wx.TE_MULTILINE|wx.TE_READONLY)
@@ -313,10 +318,10 @@ class CalculatorGUI(wx.Frame):
         mainpanelsizer.Add(self.middlepanel, 4,
            wx.ALL|wx.EXPAND|wx.ALIGN_CENTER_HORIZONTAL|wx.ALIGN_CENTER_VERTICAL,
                            5)
-        sizer_1.Add(self.calculatebutton, 1, wx.ALL|wx.ALIGN_CENTER_VERTICAL, 5)
+        sizer_1.Add(self.calculatebutton, 2, wx.ALL|wx.ALIGN_CENTER_VERTICAL, 10)
+        sizer_1.Add(self.stepbeginningbutton, 1, wx.ALL|wx.ALIGN_CENTER_VERTICAL, 5)
         sizer_1.Add(self.stepforwardbutton, 1, wx.ALL|wx.ALIGN_CENTER_VERTICAL, 5)
         sizer_1.Add(self.stepbackbutton, 1, wx.ALL|wx.ALIGN_CENTER_VERTICAL, 5)
-        sizer_1.Add(self.stepbeginningbutton, 1, wx.ALL|wx.ALIGN_CENTER_VERTICAL, 5)
         sizer_1.Add(self.stependbutton, 1, wx.ALL|wx.ALIGN_CENTER_VERTICAL, 5)
         
         lowerpanelsizer.Add(sizer_1, 1, wx.EXPAND, 0)
@@ -424,7 +429,9 @@ class CalculatorGUI(wx.Frame):
                           (self.papressctrl, ''),
                           (self.aopressctrl, '')]:
             ctrl.SetValue(val)
-    
+
+        for ctrl in self.output_controls:
+            ctrl.Clear()
             
             
     def on_calculate(self, event):
