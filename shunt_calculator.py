@@ -1,7 +1,5 @@
 #!/usr/bin/env python
 
-# Author: Raja Selvaraj <rajajs@gmail.com>
-
 # Based on http://www3.rbht.nhs.uk/flowcalculations.asp
 
 ####################
@@ -13,17 +11,27 @@
    # HR - bpm
    # Hb - g/dl
    # all sat - %
+
 from __future__ import division
 
 import wx
 import math
 from pprint import pprint
 
+__author__ = 'Raja Selvaraj <rajajs@gmail.com>'
+__version__ = '0.4'
+
+ABOUT_MESSAGE = """
+Shunt Calculator version %s
+
+Author: %s
+""" %(__version__, __author__)
+
 ID_SAVE = wx.NewId()
 ID_QUIT = wx.NewId()
 ID_CLEAR = wx.NewId()
 ID_DEMO = wx.NewId()
-
+ID_ABOUT = wx.NewId()
 
 class CalculatorGUI(wx.Frame):
     def __init__(self, *args, **kwds):
@@ -183,11 +191,15 @@ class CalculatorGUI(wx.Frame):
         input_menu = wx.Menu()
         input_menu.Append(ID_CLEAR, "Clear", "Clear input values")
         input_menu.Append(ID_DEMO, "Demo", "Fill demo values")
+
+        help_menu = wx.Menu()
+        help_menu.Append(ID_ABOUT, "About", "About this application")
         
         self.MenuBar.Append(file_menu, "&File")
         self.MenuBar.Append(input_menu, "&Input")
-        #self.MenuBar.Append(report_edit_menu, "&Edit Report")
-                
+        self.MenuBar.Append(help_menu, "&Help")
+
+        
         self.SetMenuBar(self.MenuBar)
         
         
@@ -329,6 +341,15 @@ class CalculatorGUI(wx.Frame):
 
         self.Bind(wx.EVT_MENU, self.fill_demo_values, id=ID_DEMO)
         self.Bind(wx.EVT_MENU, self.fill_default_values, id=ID_CLEAR)
+        self.Bind(wx.EVT_MENU, self.display_about, id=ID_ABOUT)
+
+
+    def display_about(self, event):
+        """Display an about message"""
+        dlg = wx.MessageDialog(self, ABOUT_MESSAGE, "About this app", wx.OK)
+        dlg.ShowModal()
+        dlg.Destroy()
+             
         
     def getvalues(self):
         """read the input values into a dictionary"""
