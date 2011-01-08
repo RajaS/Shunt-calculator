@@ -105,6 +105,12 @@ class CalculatorGUI(wx.Frame):
         self.qelabel = wx.StaticText(self.middlepanel, -1, "Q eff (L/min)")
         self.qedisplay = wx.TextCtrl(self.middlepanel, -1, "",
                                      style=wx.TE_READONLY)
+        self.rt2ltlabel = wx.StaticText(self.middlepanel, -1, "Rt to Lt shunt (L/min)")
+        self.rt2ltdisplay = wx.TextCtrl(self.middlepanel, -1, "",
+                                        style=wx.TE_READONLY)
+        self.lt2rtlabel = wx.StaticText(self.middlepanel, -1, "Lt to Rt shunt (L/min)")
+        self.lt2rtdisplay = wx.TextCtrl(self.middlepanel, -1, "",
+                                        style=wx.TE_READONLY)
         self.qratiolabel = wx.StaticText(self.middlepanel, -1, "Qp / Qs")
         self.qratiodisplay = wx.TextCtrl(self.middlepanel, -1, "",
                                          style=wx.TE_READONLY)
@@ -151,6 +157,7 @@ class CalculatorGUI(wx.Frame):
         self.output_controls = [self.bsadisplay, self.vo2display,
                          self.mvsatdisplay, self.o2capacitydisplay,
                          self.qpdisplay, self.qsdisplay, self.qedisplay,
+                         self.rt2ltdisplay, self.lt2rtdisplay,
                          self.qratiodisplay, self.pvrdisplay, self.svrdisplay,
                                 self.pvrsvrratiodisplay]
 
@@ -202,88 +209,94 @@ class CalculatorGUI(wx.Frame):
         mainpanelsizer.Add(self.upperpanel, 1,
                            wx.ALL|wx.EXPAND|wx.FIXED_MINSIZE, 5)
         inputsizer.Add(self.namelabel, 0,
-                       wx.ALIGN_CENTER_HORIZONTAL|wx.ALIGN_CENTER_VERTICAL, 0)
+                       wx.ALIGN_LEFT|wx.ALIGN_CENTER_VERTICAL, 0)
         inputsizer.Add(self.namectrl, 0, wx.EXPAND, 0)
         inputsizer.Add(self.agelabel, 0,
-                       wx.ALIGN_CENTER_HORIZONTAL|wx.ALIGN_CENTER_VERTICAL, 0)
+                       wx.ALIGN_LEFT|wx.ALIGN_CENTER_VERTICAL, 0)
         inputsizer.Add(self.agectrl, 0, wx.EXPAND, 0)
         inputsizer.Add(self.sexlabel, 0,
-                       wx.ALIGN_CENTER_HORIZONTAL|wx.ALIGN_CENTER_VERTICAL, 0)
+                       wx.ALIGN_LEFT|wx.ALIGN_CENTER_VERTICAL, 0)
         inputsizer.Add(self.sexctrl, 0, wx.EXPAND, 0)
         inputsizer.Add(self.htlabel, 0,
-                       wx.ALIGN_CENTER_HORIZONTAL|wx.ALIGN_CENTER_VERTICAL, 0)
+                       wx.ALIGN_LEFT|wx.ALIGN_CENTER_VERTICAL, 0)
         inputsizer.Add(self.htctrl, 0, wx.EXPAND, 0)
         inputsizer.Add(self.wtlabel, 0,
-                       wx.ALIGN_CENTER_HORIZONTAL|wx.ALIGN_CENTER_VERTICAL, 0)
+                       wx.ALIGN_LEFT|wx.ALIGN_CENTER_VERTICAL, 0)
         inputsizer.Add(self.wtctrl, 0, wx.EXPAND, 0)
         inputsizer.Add(self.hrlabel, 0,
-                       wx.ALIGN_CENTER_HORIZONTAL|wx.ALIGN_CENTER_VERTICAL, 0)
+                       wx.ALIGN_LEFT|wx.ALIGN_CENTER_VERTICAL, 0)
         inputsizer.Add(self.hrctrl, 0, wx.EXPAND, 0)
         inputsizer.Add(self.hblabel, 0,
-                       wx.ALIGN_CENTER_HORIZONTAL|wx.ALIGN_CENTER_VERTICAL, 0)
+                       wx.ALIGN_LEFT|wx.ALIGN_CENTER_VERTICAL, 0)
         inputsizer.Add(self.hbctrl, 0, wx.EXPAND, 0)
         inputsizer.Add(self.svcsatlabel, 0,
-                       wx.ALIGN_CENTER_HORIZONTAL|wx.ALIGN_CENTER_VERTICAL, 0)
+                       wx.ALIGN_LEFT|wx.ALIGN_CENTER_VERTICAL, 0)
         inputsizer.Add(self.svcsatctrl, 0, wx.EXPAND, 0)
         inputsizer.Add(self.ivcsatlabel, 0,
-                       wx.ALIGN_CENTER_HORIZONTAL|wx.ALIGN_CENTER_VERTICAL, 0)
+                       wx.ALIGN_LEFT|wx.ALIGN_CENTER_VERTICAL, 0)
         inputsizer.Add(self.ivcsatctrl, 0, wx.EXPAND, 0)
         inputsizer.Add(self.pasatlabel, 0,
-                       wx.ALIGN_CENTER_HORIZONTAL|wx.ALIGN_CENTER_VERTICAL, 0)
+                       wx.ALIGN_LEFT|wx.ALIGN_CENTER_VERTICAL, 0)
         inputsizer.Add(self.pasatctrl, 0, wx.EXPAND, 0)
         inputsizer.Add(self.pvsatlabel, 0,
-                       wx.ALIGN_CENTER_HORIZONTAL|wx.ALIGN_CENTER_VERTICAL, 0)
+                       wx.ALIGN_LEFT|wx.ALIGN_CENTER_VERTICAL, 0)
         inputsizer.Add(self.pvsatctrl, 0, wx.EXPAND, 0)
         inputsizer.Add(self.aosatlabel, 0,
-                       wx.ALIGN_CENTER_HORIZONTAL|wx.ALIGN_CENTER_VERTICAL, 0)
+                       wx.ALIGN_LEFT|wx.ALIGN_CENTER_VERTICAL, 0)
         inputsizer.Add(self.aosatctrl, 0, wx.EXPAND, 0)
         inputsizer.Add(self.rapresslabel, 0,
-                       wx.ALIGN_CENTER_HORIZONTAL|wx.ALIGN_CENTER_VERTICAL, 0)
+                       wx.ALIGN_LEFT|wx.ALIGN_CENTER_VERTICAL, 0)
         inputsizer.Add(self.rapressctrl, 0, wx.EXPAND, 0)
         inputsizer.Add(self.lapresslabel, 0,
-                       wx.ALIGN_CENTER_HORIZONTAL|wx.ALIGN_CENTER_VERTICAL, 0)
+                       wx.ALIGN_LEFT|wx.ALIGN_CENTER_VERTICAL, 0)
         inputsizer.Add(self.lapressctrl, 0, wx.EXPAND, 0)
         inputsizer.Add(self.papresslabel, 0,
-                       wx.ALIGN_CENTER_HORIZONTAL|wx.ALIGN_CENTER_VERTICAL, 0)
+                       wx.ALIGN_LEFT|wx.ALIGN_CENTER_VERTICAL, 0)
         inputsizer.Add(self.papressctrl, 0, wx.EXPAND, 0)
         inputsizer.Add(self.aopresslabel, 0,
-                       wx.ALIGN_CENTER_HORIZONTAL|wx.ALIGN_CENTER_VERTICAL, 0)
+                       wx.ALIGN_LEFT|wx.ALIGN_CENTER_VERTICAL, 0)
         inputsizer.Add(self.aopressctrl, 0, wx.EXPAND, 0)
-        middlepanelsizer.Add(inputsizer, 2, wx.RIGHT|wx.EXPAND, 5)
+        middlepanelsizer.Add(inputsizer, 2, wx.RIGHT|wx.EXPAND, 10)
         outputsizer.Add(self.bsalabel, 0,
-                        wx.ALIGN_CENTER_HORIZONTAL|wx.ALIGN_CENTER_VERTICAL, 0)
+                        wx.ALIGN_LEFT|wx.ALIGN_CENTER_VERTICAL, 0)
         outputsizer.Add(self.bsadisplay, 0, wx.EXPAND, 0)
         outputsizer.Add(self.vo2label, 0,
-                        wx.ALIGN_CENTER_HORIZONTAL|wx.ALIGN_CENTER_VERTICAL, 0)
+                        wx.ALIGN_LEFT|wx.ALIGN_CENTER_VERTICAL, 0)
         outputsizer.Add(self.vo2display, 0, wx.EXPAND, 0)
         outputsizer.Add(self.o2capacitylabel, 0,
-                        wx.ALIGN_CENTER_HORIZONTAL|wx.ALIGN_CENTER_VERTICAL, 0)
+                        wx.ALIGN_LEFT|wx.ALIGN_CENTER_VERTICAL, 0)
         outputsizer.Add(self.o2capacitydisplay, 0, wx.EXPAND, 0)
         outputsizer.Add(self.mvsatlabel, 0,
-                        wx.ALIGN_CENTER_HORIZONTAL|wx.ALIGN_CENTER_VERTICAL, 0)
+                        wx.ALIGN_LEFT|wx.ALIGN_CENTER_VERTICAL, 0)
         outputsizer.Add(self.mvsatdisplay, 0, wx.EXPAND, 0)
         outputsizer.Add(self.qplabel, 0,
-                        wx.ALIGN_CENTER_HORIZONTAL|wx.ALIGN_CENTER_VERTICAL, 0)
+                        wx.ALIGN_LEFT|wx.ALIGN_CENTER_VERTICAL, 0)
         outputsizer.Add(self.qpdisplay, 0, wx.EXPAND, 0)
         outputsizer.Add(self.qslabel, 0,
-                        wx.ALIGN_CENTER_HORIZONTAL|wx.ALIGN_CENTER_VERTICAL, 0)
+                        wx.ALIGN_LEFT|wx.ALIGN_CENTER_VERTICAL, 0)
         outputsizer.Add(self.qsdisplay, 0, wx.EXPAND, 0)
         outputsizer.Add(self.qelabel, 0,
-                        wx.ALIGN_CENTER_HORIZONTAL|wx.ALIGN_CENTER_VERTICAL, 0)
+                        wx.ALIGN_LEFT|wx.ALIGN_CENTER_VERTICAL, 0)
         outputsizer.Add(self.qedisplay, 0, wx.EXPAND, 0)
+        outputsizer.Add(self.rt2ltlabel, 0,
+                        wx.ALIGN_LEFT|wx.ALIGN_CENTER_VERTICAL, 0)
+        outputsizer.Add(self.rt2ltdisplay, 0, wx.EXPAND, 0)
+        outputsizer.Add(self.lt2rtlabel, 0,
+                        wx.ALIGN_LEFT|wx.ALIGN_CENTER_VERTICAL, 0)
+        outputsizer.Add(self.lt2rtdisplay, 0, wx.EXPAND, 0)
         outputsizer.Add(self.qratiolabel, 0,
-                        wx.ALIGN_CENTER_HORIZONTAL|wx.ALIGN_CENTER_VERTICAL, 0)
+                        wx.ALIGN_LEFT|wx.ALIGN_CENTER_VERTICAL, 0)
         outputsizer.Add(self.qratiodisplay, 0, wx.EXPAND, 0)
         outputsizer.Add(self.pvrlabel, 0,
-                        wx.ALIGN_CENTER_HORIZONTAL|wx.ALIGN_CENTER_VERTICAL, 0)
+                        wx.ALIGN_LEFT|wx.ALIGN_CENTER_VERTICAL, 0)
         outputsizer.Add(self.pvrdisplay, 0, wx.EXPAND, 0)
         outputsizer.Add(self.svrlabel, 0,
-                        wx.ALIGN_CENTER_HORIZONTAL|wx.ALIGN_CENTER_VERTICAL, 0)
+                        wx.ALIGN_LEFT|wx.ALIGN_CENTER_VERTICAL, 0)
         outputsizer.Add(self.svrdisplay, 0, wx.EXPAND, 0)
         outputsizer.Add(self.pvrsvrratiolabel, 0,
-                        wx.ALIGN_CENTER_HORIZONTAL|wx.ALIGN_CENTER_VERTICAL, 0)
+                        wx.ALIGN_LEFT|wx.ALIGN_CENTER_VERTICAL, 0)
         outputsizer.Add(self.pvrsvrratiodisplay, 0, wx.EXPAND, 0)
-        middlepanelsizer.Add(outputsizer, 3, wx.LEFT|wx.EXPAND, 5)
+        middlepanelsizer.Add(outputsizer, 3, wx.LEFT|wx.EXPAND, 10)
         self.middlepanel.SetSizer(middlepanelsizer)
         mainpanelsizer.Add(self.middlepanel, 4,
            wx.ALL|wx.EXPAND|wx.ALIGN_CENTER_HORIZONTAL|wx.ALIGN_CENTER_VERTICAL,
@@ -315,7 +328,7 @@ class CalculatorGUI(wx.Frame):
         self.stependbutton.Bind(wx.EVT_BUTTON, self.on_step)
 
         self.Bind(wx.EVT_MENU, self.fill_demo_values, id=ID_DEMO)
-        self.Bind(wx.EVT_MENU, self.clear_all, id=ID_CLEAR)
+        self.Bind(wx.EVT_MENU, self.fill_default_values, id=ID_CLEAR)
         
     def getvalues(self):
         """read the input values into a dictionary"""
@@ -348,6 +361,9 @@ class CalculatorGUI(wx.Frame):
 
 
     def fill_demo_values(self, event):
+        """Demo input values"""
+        # TODO: maintain set of dictionaries for input
+        #       values to fill. demo, initial, normal, lt2rt and so on.
         for ctrl, val in [(self.namectrl, 'John Doe'),
                           (self.agectrl, '36'),
                           (self.sexctrl, 'Male'),
@@ -366,7 +382,30 @@ class CalculatorGUI(wx.Frame):
                           (self.aopressctrl, '90')]:
             ctrl.SetValue(val)
     
-        
+
+    def fill_default_values(self, event):
+        """Values that will be filled in initially
+        and on clearing entered values"""
+        for ctrl, val in [(self.namectrl, ''),
+                          (self.agectrl, ''),
+                          (self.sexctrl, 'Male'),
+                          (self.htctrl, ''),
+                          (self.wtctrl, ''),
+                          (self.hrctrl, ''),
+                          (self.hbctrl, ''),
+                          (self.svcsatctrl, ''),
+                          (self.ivcsatctrl, ''),
+                          (self.pvsatctrl, ''),
+                          (self.pasatctrl, ''),
+                          (self.aosatctrl, ''),
+                          (self.rapressctrl, ''),
+                          (self.lapressctrl, ''),
+                          (self.papressctrl, ''),
+                          (self.aopressctrl, '')]:
+            ctrl.SetValue(val)
+    
+            
+            
     def on_calculate(self, event):
         """Run all the calculations and display the results"""
         vals = self.getvalues()
@@ -385,12 +424,6 @@ class CalculatorGUI(wx.Frame):
         
         if event != None:
             self.display_result_frame(self.frames[len(self.frames)-1])
-
-
-    def clear_all(self, event):
-        """clear all inout values"""
-        for control in self.input_controls:
-            control.Clear()
 
             
     def calculate_all(self, vals):
@@ -436,9 +469,9 @@ class CalculatorGUI(wx.Frame):
             results_display.append((self.vo2display,
                        "Female: BSA x (138.1 - (11.49 x log(age)) + (0.378 x Heart rate)))"))
             results_display.append((self.vo2display,
-              "%0.2f x (138.1 - (11.49 x log(%d)) + (0.378 x %d)))" (bsa, vals['age'], vals['hr'])))
+              "%0.2f x (138.1 - (11.49 x log(%d)) + (0.378 x %d)))" %(bsa, vals['age'], vals['hr'])))
             results_display.append((self.vo2display,
-              "%0.2f x (138.1 - (11.49 x %d) + %d))" (bsa, math.log(vals['age']), 0.378*vals['hr'])))
+              "%0.2f x (138.1 - (11.49 x %d) + %d))" %(bsa, math.log(vals['age']), 0.378*vals['hr'])))
         results_display.append((self.vo2display, str(vo2)))
                 
         # Calculate MV saturation
@@ -492,6 +525,14 @@ class CalculatorGUI(wx.Frame):
         results_display.append((self.qedisplay,
                   "%0.2f x (%d - %d) / 100" %(o2capacity, vals['pvsat'], mvsat)))
         results_display.append((self.qedisplay, str(qe)))
+
+        # shunts
+        rt2lt = qs - qe
+        lt2rt = qp - qe
+        results_display.append((self.rt2ltdisplay, "Qs - Qeff"))
+        results_display.append((self.rt2ltdisplay, str(rt2lt)))
+        results_display.append((self.lt2rtdisplay, "Qp - Qeff"))
+        results_display.append((self.lt2rtdisplay, str(lt2rt)))
         
         # Qp / Qs
         qp_qs = qp / qs
