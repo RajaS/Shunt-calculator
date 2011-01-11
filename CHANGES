@@ -1,2 +1,4 @@
 version 0.5
 ----------
+* Changed labels for pressures to clarify they are mean.
+* Demo values for normal, left to right, right to left and bidirectional shunts

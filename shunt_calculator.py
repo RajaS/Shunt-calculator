@@ -29,9 +29,14 @@ Author: %s
 
 ID_SAVE = wx.NewId()
 ID_QUIT = wx.NewId()
-ID_CLEAR = wx.NewId()
-ID_DEMO = wx.NewId()
 ID_ABOUT = wx.NewId()
+
+ID_CLEAR = wx.NewId()
+ID_NORMAL = wx.NewId()
+ID_L2R = wx.NewId()
+ID_R2L = wx.NewId()
+ID_BIDIRECTIONAL = wx.NewId()
+    
 
 class CalculatorGUI(wx.Frame):
     def __init__(self, *args, **kwds):
@@ -78,16 +83,16 @@ class CalculatorGUI(wx.Frame):
         self.aosatlabel = wx.StaticText(self.middlepanel, -1, "Ao sat")
         self.aosatctrl = wx.TextCtrl(self.middlepanel, -1, "")
         self.rapresslabel = wx.StaticText(self.middlepanel, -1,
-                                          "RA press (mm Hg)")
+                                          "Mean RA press (mm Hg)")
         self.rapressctrl = wx.TextCtrl(self.middlepanel, -1, "")
         self.lapresslabel = wx.StaticText(self.middlepanel, -1,
-                                          "LA press (mm Hg)")
+                                          "Mean LA press (mm Hg)")
         self.lapressctrl = wx.TextCtrl(self.middlepanel, -1, "")
         self.papresslabel = wx.StaticText(self.middlepanel, -1,
-                                          "PA press (mm Hg)")
+                                          "mean PA press (mm Hg)")
         self.papressctrl = wx.TextCtrl(self.middlepanel, -1, "")
         self.aopresslabel = wx.StaticText(self.middlepanel, -1,
-                                          "Ao press (mm Hg)")
+                                          "Mean Ao press (mm Hg)")
         self.aopressctrl = wx.TextCtrl(self.middlepanel, -1, "")
         self.bsalabel = wx.StaticText(self.middlepanel, -1, "BSA (m2)")
         self.bsadisplay = wx.TextCtrl(self.middlepanel, -1, "",
@@ -154,7 +159,96 @@ class CalculatorGUI(wx.Frame):
         self.calculator = ShuntCalculator()
 
         # for testing
-        #self.fill_demo_values()
+        ##
+        # some input value sets
+        self.DEMO_NORMAL = [(self.namectrl, 'Normal'),
+                            (self.agectrl, '50'),
+                            (self.sexctrl, 'Female'),
+                            (self.htctrl, '165'),
+                            (self.wtctrl, '60'),
+                            (self.hrctrl, '70'),
+                            (self.hbctrl, '13'),
+                            (self.svcsatctrl, '73'),
+                            (self.ivcsatctrl, '77'),
+                            (self.pasatctrl, '74'),
+                            (self.pvsatctrl, '99'),
+                            (self.aosatctrl, '99'),
+                            (self.rapressctrl, '5'),
+                            (self.lapressctrl, '7'),
+                            (self.papressctrl, '20'),
+                            (self.aopressctrl, '90')]
+
+        self.DEMO_LT2RT = [(self.namectrl, 'Left to right'),
+                            (self.agectrl, '50'),
+                            (self.sexctrl, 'Female'),
+                            (self.htctrl, '165'),
+                            (self.wtctrl, '60'),
+                            (self.hrctrl, '70'),
+                            (self.hbctrl, '11'),
+                            (self.svcsatctrl, '70'),
+                            (self.ivcsatctrl, '75'),
+                            (self.pasatctrl, '82'),
+                            (self.pvsatctrl, '99'),
+                            (self.aosatctrl, '99'),
+                            (self.rapressctrl, '6'),
+                            (self.lapressctrl, '9'),
+                            (self.papressctrl, '56'),
+                            (self.aopressctrl, '78')]
+
+        self.DEMO_RT2LT = [(self.namectrl, 'Right to left'),
+                            (self.agectrl, '50'),
+                            (self.sexctrl, 'Female'),
+                            (self.htctrl, '165'),
+                            (self.wtctrl, '60'),
+                            (self.hrctrl, '70'),
+                            (self.hbctrl, '13'),
+                            (self.svcsatctrl, '71'),
+                            (self.ivcsatctrl, '71'),
+                            (self.pasatctrl, '71'),
+                            (self.pvsatctrl, '99'),
+                            (self.aosatctrl, '91'),
+                            (self.rapressctrl, '10'),
+                            (self.lapressctrl, '11'),
+                            (self.papressctrl, '72'),
+                            (self.aopressctrl, '82')]
+
+        self.DEMO_BIDIRECTIONAL = [(self.namectrl, 'Bidirectional'),
+                            (self.agectrl, '50'),
+                            (self.sexctrl, 'Female'),
+                            (self.htctrl, '165'),
+                            (self.wtctrl, '60'),
+                            (self.hrctrl, '70'),
+                            (self.hbctrl, '20'),
+                            (self.svcsatctrl, '60'),
+                            (self.ivcsatctrl, '67'),
+                            (self.pasatctrl, '80'),
+                            (self.pvsatctrl, '99'),
+                            (self.aosatctrl, '85'),
+                            (self.rapressctrl, '15'),
+                            (self.lapressctrl, '18'),
+                            (self.papressctrl, '89'),
+                            (self.aopressctrl, '68')]
+
+        self.DEFAULT = [(self.namectrl, ''),
+                            (self.agectrl, ''),
+                            (self.sexctrl, 'Male'),
+                            (self.htctrl, ''),
+                            (self.wtctrl, ''),
+                            (self.hrctrl, ''),
+                            (self.hbctrl, ''),
+                            (self.svcsatctrl, ''),
+                            (self.ivcsatctrl, ''),
+                            (self.pasatctrl, ''),
+                            (self.pvsatctrl, ''),
+                            (self.aosatctrl, ''),
+                            (self.rapressctrl, ''),
+                            (self.lapressctrl, ''),
+                            (self.papressctrl, ''),
+                            (self.aopressctrl, '')]
+
+
+
+
 
         self.old_vals = {}
         self.frame_current_count = 0
@@ -195,7 +289,10 @@ class CalculatorGUI(wx.Frame):
    
         input_menu = wx.Menu()
         input_menu.Append(ID_CLEAR, "Clear", "Clear input values")
-        input_menu.Append(ID_DEMO, "Demo", "Fill demo values")
+        input_menu.Append(ID_NORMAL, "Demo - Normal", "Fill normal values")
+        input_menu.Append(ID_L2R, "Demo - left to right", "Fill values for left to right shunt")
+        input_menu.Append(ID_R2L, "Demo - right to left", "Fill values for right to left shunt")
+        input_menu.Append(ID_BIDIRECTIONAL, "Demo - bidirectional", "Fill values for bidirectional shunt")
 
         help_menu = wx.Menu()
         help_menu.Append(ID_ABOUT, "About", "About this application")
@@ -344,8 +441,12 @@ class CalculatorGUI(wx.Frame):
         self.stepbeginningbutton.Bind(wx.EVT_BUTTON, self.on_step)
         self.stependbutton.Bind(wx.EVT_BUTTON, self.on_step)
 
-        self.Bind(wx.EVT_MENU, self.fill_demo_values, id=ID_DEMO)
+        self.Bind(wx.EVT_MENU, self.fill_demo_values, id=ID_NORMAL)
+        self.Bind(wx.EVT_MENU, self.fill_demo_values, id = ID_L2R)
+        self.Bind(wx.EVT_MENU, self.fill_demo_values, id = ID_R2L)
+        self.Bind(wx.EVT_MENU, self.fill_demo_values, id = ID_BIDIRECTIONAL)
         self.Bind(wx.EVT_MENU, self.fill_default_values, id=ID_CLEAR)
+
         self.Bind(wx.EVT_MENU, self.display_about, id=ID_ABOUT)
 
 
@@ -388,46 +489,20 @@ class CalculatorGUI(wx.Frame):
 
     def fill_demo_values(self, event):
         """Demo input values"""
-        # TODO: maintain set of dictionaries for input
-        #       values to fill. demo, initial, normal, lt2rt and so on.
-        for ctrl, val in [(self.namectrl, 'John Doe'),
-                          (self.agectrl, '36'),
-                          (self.sexctrl, 'Male'),
-                          (self.htctrl, '170'),
-                          (self.wtctrl, '78'),
-                          (self.hrctrl, '72'),
-                          (self.hbctrl, '14'),
-                          (self.svcsatctrl, '64'),
-                          (self.ivcsatctrl, '56'),
-                          (self.pvsatctrl, '99'),
-                          (self.pasatctrl, '80'),
-                          (self.aosatctrl, '99'),
-                          (self.rapressctrl, '6'),
-                          (self.lapressctrl, '8'),
-                          (self.papressctrl, '20'),
-                          (self.aopressctrl, '90')]:
+        event_id = event.GetId()
+
+        ids = [ID_NORMAL, ID_L2R, ID_R2L, ID_BIDIRECTIONAL]
+        vals = [self.DEMO_NORMAL, self.DEMO_LT2RT,
+                self.DEMO_RT2LT, self.DEMO_BIDIRECTIONAL]
+        
+        for ctrl, val in vals[ids.index(event_id)]:
             ctrl.SetValue(val)
     
 
     def fill_default_values(self, event):
         """Values that will be filled in initially
         and on clearing entered values"""
-        for ctrl, val in [(self.namectrl, ''),
-                          (self.agectrl, ''),
-                          (self.sexctrl, 'Male'),
-                          (self.htctrl, ''),
-                          (self.wtctrl, ''),
-                          (self.hrctrl, ''),
-                          (self.hbctrl, ''),
-                          (self.svcsatctrl, ''),
-                          (self.ivcsatctrl, ''),
-                          (self.pvsatctrl, ''),
-                          (self.pasatctrl, ''),
-                          (self.aosatctrl, ''),
-                          (self.rapressctrl, ''),
-                          (self.lapressctrl, ''),
-                          (self.papressctrl, ''),
-                          (self.aopressctrl, '')]:
+        for ctrl, val in self.DEFAULT:
             ctrl.SetValue(val)
 
         for ctrl in self.output_controls:
