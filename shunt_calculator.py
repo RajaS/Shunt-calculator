@@ -921,7 +921,6 @@ class PreferenceDialog(wx.Dialog):
         self.parent = parent
         self.mainpanel = wx.Panel(self,-1, style=wx.SUNKEN_BORDER)
 
-        # choices = [(name of choice, description to display), .. default]
         self.bsachoices = ['Mosteller: sqrt(Ht x Wt / 3600)',
                            'Dubois: 0.20247 x (Ht in m)^0.725 x Wt^0.4325']
         self.mvsatchoices = ['MVC = SVC', 'MVC = IVC',
@@ -940,8 +939,10 @@ class PreferenceDialog(wx.Dialog):
                                       style=wx.CB_DROPDOWN|wx.CB_DROPDOWN)
         
         #self.resetbutton = wx.Button(self.mainpanel, -1, "Reset")
-        self.donebutton = wx.Button(self.mainpanel, wx.ID_OK, "Done")
-        self.cancelbutton = wx.Button(self.mainpanel, wx.ID_CANCEL, "Cancel")
+        self.donebutton = wx.Button(self.mainpanel, wx.ID_OK, "Done",
+                                    size=(100,30))
+        self.cancelbutton = wx.Button(self.mainpanel, wx.ID_CANCEL, "Cancel",
+                                      size=(100,30))
 
         self.__set_properties()
         self.__do_layout()
@@ -968,26 +969,32 @@ class PreferenceDialog(wx.Dialog):
         bsasizer = wx.BoxSizer(wx.HORIZONTAL)
         mvsatsizer = wx.BoxSizer(wx.HORIZONTAL)
 
+        mainsizer.Add((-1, 20))
+
         bsasizer.Add(self.bsalabel, 4, wx.LEFT|wx.TOP|wx.ALIGN_CENTER_VERTICAL, 2)
-        bsasizer.Add(self.bsacombo, 6,
-         wx.LEFT|wx.RIGHT|wx.TOP|wx.ALIGN_CENTER_HORIZONTAL|wx.ALIGN_CENTER_VERTICAL, 2)
-        mainsizer.Add(bsasizer, 1, wx.EXPAND, 0)
+        bsasizer.Add(self.bsacombo, 6, wx.LEFT|wx.TOP, 2)
+        mainsizer.Add(bsasizer, 0, wx.EXPAND)
+
+        mainsizer.Add((-1, 20))
 
         mvsatsizer.Add(self.mvsatlabel, 4, wx.LEFT|wx.TOP|wx.ALIGN_CENTER_VERTICAL, 2)
         mvsatsizer.Add(self.mvsatcombo, 6,
          wx.LEFT|wx.RIGHT|wx.TOP|wx.ALIGN_CENTER_HORIZONTAL|wx.ALIGN_CENTER_VERTICAL, 2)
-        mainsizer.Add(mvsatsizer, 1, wx.EXPAND, 0)
+        mainsizer.Add(mvsatsizer, 0, wx.EXPAND)
 
-        buttonsizer.Add(self.cancelbutton, 1,
-          wx.LEFT|wx.TOP|wx.BOTTOM|wx.ALIGN_RIGHT|wx.ALIGN_CENTER_HORIZONTAL|wx.ALIGN_CENTER_VERTICAL, 2)
-        buttonsizer.Add(self.donebutton, 1,
-         wx.ALL|wx.ALIGN_RIGHT|wx.ALIGN_CENTER_HORIZONTAL|wx.ALIGN_CENTER_VERTICAL, 2)
-        mainsizer.Add(buttonsizer, 1, wx.EXPAND, 0)
+        mainsizer.Add((-1, 20))
+
+        buttonsizer.Add(self.cancelbutton, 0, 2)
+        buttonsizer.Add(self.donebutton, 0, 2)
+        mainsizer.Add(buttonsizer, 0, wx.EXPAND)
+
+        mainsizer.Add((-1, 20))
+        
         self.mainpanel.SetSizer(mainsizer)
         mainsizer.Fit(self)
         self.Layout()
         # end wxGlade
-        self.SetSize((400, 400))
+        self.SetSize((400, 200))
 
     
     def set_options(self):
@@ -1001,9 +1008,7 @@ class PreferenceDialog(wx.Dialog):
         """Get values"""
         self.config.options['bsa'] = self.bsachoices.index(self.bsacombo.GetValue())
         self.config.options['mvsat'] = self.mvsatchoices.index(self.mvsatcombo.GetValue())
-        print 'got options', self.config.options
-
-
+  
     def onReset(self, event): # wxGlade: PreferenceDialog.<event_handler>
         """Reset the options to the ones in the file"""
         self.readOptions()
@@ -1014,9 +1019,6 @@ class PreferenceDialog(wx.Dialog):
         self.get_options()
         self.config.write_options()
         event.Skip()
-        #self.Destroy()
-
-# end of class PreferenceDialog
 
 
             
