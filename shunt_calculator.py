@@ -14,12 +14,14 @@
 
 from __future__ import division
 
+import os
 import wx
 import math
-from pprint import pprint
+#from pprint import pprint
+import yaml
 
 __author__ = 'Raja Selvaraj <rajajs@gmail.com>'
-__version__ = '0.4'
+__version__ = '0.5'
 
 ABOUT_MESSAGE = """
 Shunt Calculator version %s
@@ -30,6 +32,7 @@ Author: %s
 ID_SAVE = wx.NewId()
 ID_QUIT = wx.NewId()
 ID_ABOUT = wx.NewId()
+ID_PREF = wx.NewId()
 
 ID_CLEAR = wx.NewId()
 ID_NORMAL = wx.NewId()
@@ -156,10 +159,16 @@ class CalculatorGUI(wx.Frame):
         self.__do_layout()
         self.__set_bindings()
         # end wxGlade
-        self.calculator = ShuntCalculator()
+        self.options = {
+        'bsa' : 0, 
+        'mvsat' : 2
+        }
+        self.calculator = ShuntCalculator(self)
 
-        # for testing
-        ##
+        # path for preferences file
+        self.pref_filepath = os.path.join(os.path.abspath(os.path.curdir),
+                                          'calculator.conf')
+        
         # some input value sets
         self.DEMO_NORMAL = [(self.namectrl, 'Normal'),
                             (self.agectrl, '50'),
@@ -246,10 +255,6 @@ class CalculatorGUI(wx.Frame):
                             (self.papressctrl, ''),
                             (self.aopressctrl, '')]
 
-
-
-
-
         self.old_vals = {}
         self.frame_current_count = 0
         self.frame_total_count = 0
@@ -295,12 +300,12 @@ class CalculatorGUI(wx.Frame):
         input_menu.Append(ID_BIDIRECTIONAL, "Demo - bidirectional", "Fill values for bidirectional shunt")
 
         help_menu = wx.Menu()
+        help_menu.Append(ID_PREF, "Preferences", "Preferences")
         help_menu.Append(ID_ABOUT, "About", "About this application")
         
         self.MenuBar.Append(file_menu, "&File")
         self.MenuBar.Append(input_menu, "&Input")
         self.MenuBar.Append(help_menu, "&Help")
-
         
         self.SetMenuBar(self.MenuBar)
         
@@ -446,7 +451,8 @@ class CalculatorGUI(wx.Frame):
         self.Bind(wx.EVT_MENU, self.fill_demo_values, id = ID_R2L)
         self.Bind(wx.EVT_MENU, self.fill_demo_values, id = ID_BIDIRECTIONAL)
         self.Bind(wx.EVT_MENU, self.fill_default_values, id=ID_CLEAR)
-
+        self.Bind(wx.EVT_MENU, self.set_preferences, id=ID_PREF)
+        
         self.Bind(wx.EVT_MENU, self.display_about, id=ID_ABOUT)
 
 
@@ -455,7 +461,16 @@ class CalculatorGUI(wx.Frame):
         dlg = wx.MessageDialog(self, ABOUT_MESSAGE, "About this app", wx.OK)
         dlg.ShowModal()
         dlg.Destroy()
-             
+
+
+    def set_preferences(self, event):
+        """Display preferences dialog to edit and store preferences"""
+        dlg = PreferenceDialog(self, self.pref_filepath)
+        
+        if dlg.ShowModal() == wx.ID_OK:
+            self.options = dlg.config.options
+            dlg.Destroy()
+                    
         
     def getvalues(self):
         """read the input values into a dictionary"""
@@ -539,12 +554,12 @@ class CalculatorGUI(wx.Frame):
         # Body surface area
         bsa = self.calculator.calculate_bsa(vals['ht'], vals['wt'])
 
-        if self.calculator.BSA == 'mosteller':
+        if self.options['bsa'] == 0:
             results_display.append((self.bsadisplay, "Mosteller's formula"))
             results_display.append((self.bsadisplay, "sqrt(Height(cm) x Weight(kg) / 3600)"))
             results_display.append((self.bsadisplay, "sqrt(%d x %d / 3600)" %(vals['ht'], vals['wt'])))
             
-        elif self.calculator.BSA == 'dubois':
+        elif self.options['bsa'] == 1:
             results_display.append((self.bsadisplay, "Dubois' formula"))
             results_display.append((self.bsadisplay,
                                     "0.20247 x height in metres ^ 0.725 x weight ^ 0.425"))
@@ -580,19 +595,19 @@ class CalculatorGUI(wx.Frame):
         # Calculate MV saturation
         mvsat = self.calculator.calculate_mvsat(vals['svcsat'],
                                      vals['ivcsat'])
-        if self.calculator.MVSAT == 'svc':
+        if self.options['mvsat'] == 0:
             results_display.append((self.mvsatdisplay, "= SVC saturation"))
-        elif self.calculator.MVSAT == 'ivc':
+        elif self.options['mvsat'] == 1:
             results_display.append((self.mvsatdisplay, "= IVC saturation"))
-        elif self.calculator.MVSAT == 'combo1':
+        elif self.options['mvsat'] == 2:
             results_display.append((self.mvsatdisplay, "(3 x SVC + IVC) / 4"))
             results_display.append((self.mvsatdisplay, "(3 x %d + %d) / 4" %(vals['svcsat'], vals['ivcsat'])))
             results_display.append((self.mvsatdisplay, "(%d + %d) / 4" %(3*vals['svcsat'], vals['ivcsat'])))
-        elif self.calculator.MVSAT == 'combo2':
+        elif self.options['mvsat'] == 3:
             results_display.append((self.mvsatdisplay, "(2 x SVC + 3 x IVC) / 5"))
             results_display.append((self.mvsatdisplay, "(2 x %d + 3 x %d) / 5" %(vals['svcsat'], vals['ivcsat'])))
             results_display.append((self.mvsatdisplay, "(%d + %d) / 5" %(2*vals['svcsat'], 3*vals['ivcsat'])))
-        elif self.calculator.MVSAT == 'combo3':
+        elif self.options['mvsat'] == 4:
             results_display.append((self.mvsatdisplay, "(SVC + 2 x IVC) / 3"))
             results_display.append((self.mvsatdisplay, "(%d + 2 x %d) / 3" %(vals['svcsat'], vals['ivcsat'])))
             results_display.append((self.mvsatdisplay, "(%d + %d) / 4" %(vals['svcsat'], 2*vals['ivcsat'])))
@@ -744,10 +759,11 @@ class CalculatorGUI(wx.Frame):
 class ShuntCalculator():
     """Calculate shunt flows and resistances from the pressure
     and saturation values"""
-    def __init__(self):
+    def __init__(self, parent):
         # initialize variables
-        self.BSA = 'mosteller'
-        self.MVSAT = 'combo1'
+        self.parent = parent
+        #self.BSA = 'mosteller'
+        #self.MVSAT = 'combo1'
         
         self.WAITFORRESUME = False
         self.RESUME = False
@@ -756,9 +772,9 @@ class ShuntCalculator():
     def calculate_bsa(self, ht, wt):
         """body surface area returned as sq m.
         ht is in cm and wt is in kg"""
-        if self.BSA == 'mosteller':
+        if self.parent.options['bsa'] == 0: # mosteller
             return (ht * wt / 3600) ** 0.5
-        elif self.BSA == 'dubois':
+        elif self.parent.options['bsa'] == 1: # dubois
             return 0.20247 * ((ht / 100) ** 0.725) * (wt ** 0.425)
         
 
@@ -796,15 +812,15 @@ class ShuntCalculator():
 
     def calculate_mvsat(self, svcsat, ivcsat):
         """various methods to calculate mixed venous sat"""
-        if self.MVSAT == 'svc':
+        if self.parent.options['mvsat'] == 0:
             return svcsat
-        elif self.MVSAT == 'ivc':
+        elif self.parent.options['mvsat'] == 1:
             return ivcsat
-        elif self.MVSAT == 'combo1':
+        elif self.parent.options['mvsat'] == 2:
             return (3 * svcsat + ivcsat) / 4
-        elif self.MVSAT == 'combo2':
+        elif self.parent.options['mvsat'] == 3:
             return (2 * svcsat + 3 * ivcsat) / 5
-        elif self.MVSAT == 'combo3':
+        elif self.parent.options['mvsat'] == 4:
             return (svcsat + ivcsat * 2) / 3
 
 
@@ -864,6 +880,145 @@ class ShuntCalculator():
         return vals, err_msg, warn_msg
 
     
+
+class Config():
+    """The configuration stored in a config file"""
+    def __init__(self, configfile):
+        self.configfile = configfile
+        self.set_default()
+        self.read_options()
+
+    def set_default(self):
+        """Initialize with default values"""
+        self.options = {
+            'bsa' : 0, 
+            'mvsat' : 2
+            }
+        
+# bsa options - mosteller, dubois
+# mvsat options - svc, ivc, combo1, combo2, combo3
+    def read_options(self):
+        print 'configfile', self.configfile
+        try:
+            with open(self.configfile) as fi:
+                self.options = yaml.load(fi)
+        except: # if file is not present or is damaged
+            self.write_options() # write a new file
+            print 'writing....'
+            return # donot change defaults
+            
+
+    def write_options(self):
+        with open(self.configfile, 'w') as fi:
+            yaml.dump(self.options, fi)
+
+
+class PreferenceDialog(wx.Dialog):
+    def __init__(self, parent, pref_filepath):
+        """options is a dictionary that is read in and displayed.
+        Only index is stored and used by the calculator"""
+        wx.Dialog.__init__(self, parent, -1, 'Preferences')
+        self.parent = parent
+        self.mainpanel = wx.Panel(self,-1, style=wx.SUNKEN_BORDER)
+
+        # choices = [(name of choice, description to display), .. default]
+        self.bsachoices = ['Mosteller: sqrt(Ht x Wt / 3600)',
+                           'Dubois: 0.20247 x (Ht in m)^0.725 x Wt^0.4325']
+        self.mvsatchoices = ['MVC = SVC', 'MVC = IVC',
+                             'MVC = (3xSVC + IVC) / 4',
+                             'MVC = (2xSVC + 3xIVC) / 5',
+                             'MVC = (SVC + 2xIVC) / 3']
+        
+        self.bsalabel = wx.StaticText(self.mainpanel, -1, "Body surface area")
+        self.bsacombo = wx.ComboBox(self.mainpanel, -1,
+                                       choices=self.bsachoices,
+                                       style=wx.CB_DROPDOWN|wx.CB_DROPDOWN)
+
+        self.mvsatlabel = wx.StaticText(self.mainpanel, -1, "Mixed venous saturation")
+        self.mvsatcombo = wx.ComboBox(self.mainpanel, -1,
+                                      choices=self.mvsatchoices,
+                                      style=wx.CB_DROPDOWN|wx.CB_DROPDOWN)
+        
+        #self.resetbutton = wx.Button(self.mainpanel, -1, "Reset")
+        self.donebutton = wx.Button(self.mainpanel, wx.ID_OK, "Done")
+        self.cancelbutton = wx.Button(self.mainpanel, wx.ID_CANCEL, "Cancel")
+
+        self.__set_properties()
+        self.__do_layout()
+
+        self.Bind(wx.EVT_BUTTON, self.on_done, self.donebutton)
+        # end wxGlade
+        
+        self.filepath = pref_filepath
+        self.config = Config(self.filepath)
+        self.config.read_options()
+        self.set_options()
+
+    def __set_properties(self):
+        # begin wxGlade: PreferenceDialog.__set_properties
+        self.SetTitle("Preferences")
+        self.bsacombo.SetSelection(0)
+        self.mvsatcombo.SetSelection(2)
+        # end wxGlade
+
+    def __do_layout(self):
+        # begin wxGlade: PreferenceDialog.__do_layout
+        mainsizer = wx.BoxSizer(wx.VERTICAL)
+        buttonsizer = wx.BoxSizer(wx.HORIZONTAL)
+        bsasizer = wx.BoxSizer(wx.HORIZONTAL)
+        mvsatsizer = wx.BoxSizer(wx.HORIZONTAL)
+
+        bsasizer.Add(self.bsalabel, 4, wx.LEFT|wx.TOP|wx.ALIGN_CENTER_VERTICAL, 2)
+        bsasizer.Add(self.bsacombo, 6,
+         wx.LEFT|wx.RIGHT|wx.TOP|wx.ALIGN_CENTER_HORIZONTAL|wx.ALIGN_CENTER_VERTICAL, 2)
+        mainsizer.Add(bsasizer, 1, wx.EXPAND, 0)
+
+        mvsatsizer.Add(self.mvsatlabel, 4, wx.LEFT|wx.TOP|wx.ALIGN_CENTER_VERTICAL, 2)
+        mvsatsizer.Add(self.mvsatcombo, 6,
+         wx.LEFT|wx.RIGHT|wx.TOP|wx.ALIGN_CENTER_HORIZONTAL|wx.ALIGN_CENTER_VERTICAL, 2)
+        mainsizer.Add(mvsatsizer, 1, wx.EXPAND, 0)
+
+        buttonsizer.Add(self.cancelbutton, 1,
+          wx.LEFT|wx.TOP|wx.BOTTOM|wx.ALIGN_RIGHT|wx.ALIGN_CENTER_HORIZONTAL|wx.ALIGN_CENTER_VERTICAL, 2)
+        buttonsizer.Add(self.donebutton, 1,
+         wx.ALL|wx.ALIGN_RIGHT|wx.ALIGN_CENTER_HORIZONTAL|wx.ALIGN_CENTER_VERTICAL, 2)
+        mainsizer.Add(buttonsizer, 1, wx.EXPAND, 0)
+        self.mainpanel.SetSizer(mainsizer)
+        mainsizer.Fit(self)
+        self.Layout()
+        # end wxGlade
+        self.SetSize((400, 400))
+
+    
+    def set_options(self):
+        """Set values as per given options"""
+        print self.config.options
+        self.bsacombo.SetValue(self.bsachoices[self.config.options['bsa']])
+        self.mvsatcombo.SetValue(self.mvsatchoices[self.config.options['mvsat']])
+
+        
+    def get_options(self):
+        """Get values"""
+        self.config.options['bsa'] = self.bsachoices.index(self.bsacombo.GetValue())
+        self.config.options['mvsat'] = self.mvsatchoices.index(self.mvsatcombo.GetValue())
+        print 'got options', self.config.options
+
+
+    def onReset(self, event): # wxGlade: PreferenceDialog.<event_handler>
+        """Reset the options to the ones in the file"""
+        self.readOptions()
+        self.setOptions()
+
+    def on_done(self, event): # wxGlade: PreferenceDialog.<event_handler>
+        """Write to file and close"""
+        self.get_options()
+        self.config.write_options()
+        event.Skip()
+        #self.Destroy()
+
+# end of class PreferenceDialog
+
+
             
 if __name__ == "__main__":
     app = wx.PySimpleApp(0)
